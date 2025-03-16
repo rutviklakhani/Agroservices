@@ -26,6 +26,7 @@ function Register() {
     }));
   };
   
+  // Updated handler for registration with auto-login
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -37,6 +38,11 @@ function Register() {
     
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (!formData.agreeTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy');
       return;
     }
     
@@ -53,22 +59,66 @@ function Register() {
         role: formData.userType === 'admin' ? 'admin' : 'user' // Default to user role
       };
       
-      const response = await axios.post(
+      console.log('Sending registration request with:', userData);
+      
+      // Register the user
+      const registerResponse = await axios.post(
         'http://localhost:5000/api/auth/register',
-        userData,
-        { withCredentials: true }
+        userData
       );
       
-      // Store token in localStorage
-      localStorage.setItem('token', response.data.token);
+      console.log('Registration response:', registerResponse.data);
       
-      // Store user info if needed
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // Redirect to home page
-      navigate('/');
-      
+      // If registration successful, proceed to auto-login
+      if (registerResponse.data.success) {
+        try {
+          console.log('Attempting auto-login after registration');
+          
+          // Auto-login with the same credentials
+          const loginResponse = await axios.post(
+            'http://localhost:5000/api/auth/login',
+            { 
+              email: formData.email, 
+              password: formData.password 
+            },
+            { withCredentials: true }
+          );
+          
+          console.log('Auto-login response:', loginResponse.data);
+          
+          // Store token and user data in localStorage
+          localStorage.setItem('token', loginResponse.data.token);
+          
+          // Store user info with proper formatting to ensure consistent retrieval
+          const userData = {
+            id: loginResponse.data.user.id,
+            name: loginResponse.data.user.name,
+            email: loginResponse.data.user.email,
+            phone: loginResponse.data.user.phone,
+            role: loginResponse.data.user.role
+          };
+          
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          // Redirect to home page
+          navigate('/');
+          
+        } catch (loginErr) {
+          console.error('Auto-login after registration failed:', loginErr);
+          // If auto-login fails, still consider registration successful
+          // but redirect to login page instead with a message
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! Please log in with your new account.' 
+            } 
+          });
+        }
+      } else {
+        // Handle non-error but unsuccessful registration
+        setError(registerResponse.data.message || 'Registration failed. Please try again.');
+      }
     } catch (err) {
+      console.error('Registration error details:', err.response ? err.response.data : err.message);
       setError(
         err.response?.data?.message || 
         'Registration failed. Please try again later.'
@@ -307,7 +357,7 @@ function Register() {
               <button
                 type="submit"
                 disabled={isLoading || formData.password !== formData.confirmPassword || !formData.agreeTerms}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300 flex justify-center items-center"
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

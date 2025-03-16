@@ -26,6 +26,7 @@ exports.register = async (req, res) => {
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -39,6 +40,7 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
+    console.log('Login attempt with:', req.body);
     const { email, password } = req.body;
 
     // Validate email & password
@@ -51,6 +53,8 @@ exports.login = async (req, res) => {
 
     // Check for user
     const user = await User.findOne({ email }).select('+password');
+    console.log('User found:', user ? user._id : 'No user found');
+    
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -69,6 +73,7 @@ exports.login = async (req, res) => {
 
     sendTokenResponse(user, 200, res);
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -119,7 +124,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   const options = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+      Date.now() + (process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000)
     ),
     httpOnly: true
   };

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
+  const { login } = useAuth();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,6 +30,11 @@ function Login() {
     setIsLoading(true);
     
     try {
+      console.log('Sending login request with:', { 
+        email: formData.email, 
+        password: formData.password 
+      });
+      
       const response = await axios.post(
         'http://localhost:5000/api/auth/login',
         { 
@@ -36,16 +44,33 @@ function Login() {
         { withCredentials: true }
       );
       
+      console.log('Login response:', response.data);
+      
       // Store token in localStorage
       localStorage.setItem('token', response.data.token);
       
-      // Store user info if needed
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Store user info with proper formatting to ensure consistent retrieval
+      const userData = {
+        id: response.data.user.id,
+        name: response.data.user.name,
+        email: response.data.user.email,
+        phone: response.data.user.phone,
+        role: response.data.user.role
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // If remember me is checked, we could set a longer expiration
+      if (formData.rememberMe) {
+        // This could be handled on the server side with a longer token expiration
+        localStorage.setItem('rememberMe', 'true');
+      }
       
       // Redirect to home page
       navigate('/');
       
     } catch (err) {
+      console.error('Login error details:', err.response ? err.response.data : err.message);
       setError(
         err.response?.data?.message || 
         'Failed to log in. Please check your credentials and try again.'

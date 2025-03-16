@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import Header from './Header';
 
 function TrackOrderPage() {
   // State to track form input and order status
@@ -61,19 +62,7 @@ function TrackOrderPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
-      <div className="bg-gray-800 text-white text-sm py-2">
-        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <span>Download App</span>
-            <span>|</span>
-            <span>Farmer Helpline: 1800-123-4567</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <a href="#" className="text-green-300">Track Order</a>
-            <a href="Login" className="hover:text-green-300">Login / Register</a>
-          </div>
-        </div>
-      </div>
+      <Header/>
       
       {/* Main Navigation */}
       <nav className="bg-green-600 py-4 sticky top-0 z-50 shadow-md">
